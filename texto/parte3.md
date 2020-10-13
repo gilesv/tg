@@ -10,19 +10,15 @@
   3.3 Resultado do desenvolvimento
     3.3.1 Diagrama da solução
     3.3.2 Caso de uso: aplicação TodoMVC
-
 ```
 
 ### 3. Desenvolvimento
 
-#### 3.1 Objetivos
 A biblioteca React.js é, atualmente, uma das mais utilizadas para o desenvolvimento de aplicações front-end, tendo mais de 8 milhões de downloads semanais no NPM [1]. Com um grande número de projetos utilizando-o como dependência, a expectativa é que o React seja uma ferramenta estável à longo prazo, capaz de se manter atualizada com novos padrões e tecnologias, e, ao mesmo tempo, sem "breaking changes" (mudanças na interface pública da biblioteca), o que facilitará o processo de upgrade de versão em aplicações legadas.
 
 Tendo a tecnologia WebAssembly se mostrado vantajosa em questões de desempenho em vários casos de uso [2], imagina-se que futuramente sua possível integração na base de código do React ou de outras bibliotecas e frameworks possa ser benéfica, e ainda mais caso seu uso possa oferecer vantagens sem a necessidade de breaking changes. Atualmente a utilização de Wasm no React.js ainda não está em discussão, apesar de cogitada [3], visto que a tecnologia ainda encontra-se em seus primeiros passos.
 
-Assim, com base em todo o contexto técnico detalhado nos capítulos anteriores, este trabalho propõe a implementação de uma biblioteca de desenvolvimento de interfaces de usuário (front-end) na linguagem JavaScript, baseada no React.js, que seja capaz de delegar as operações complexas de seu virtual DOM para um módulo WASM. Essa biblioteca pode ser considerada um protótipo de uma possĩvel futura versão do React, que em vez de implementar os mecanismos de reconciliação em JavaScript, uma linguagem dinâmica executada numa máquina virtual, o faz via WebAssembly, cujas instruções binárias podem ser capazes de atingir desempenho próximo ao nativo [4].
-
-Apesar de ter um menor escopo de funcionalidades, limitado pelo pouco tempo disponível para o desenvolvimento desse trabalho, o protótipo aplicará os principais conceitos básicos do React, tais como o uso da API declarativa a partir de JSX (declaração de elementos com a sintaxe `<h1></h1>` ao invés de `document.createElement("h1")`); criação de componentes funcionais; e manutenção de estado por meio da função `useState` (um dos "hooks" apresentados na versão 16.8 [5]). Com essas funcionalidades, ele será capaz de entregar aplicações simples, dinâmicas e componentizadas. 
+Assim, com base em todo o contexto técnico detalhado nos capítulos anteriores, este trabalho propõe a implementação de uma biblioteca de desenvolvimento de interfaces de usuário (front-end) na linguagem JavaScript, baseada no React.js, que seja capaz de delegar as operações complexas de seu virtual DOM para um módulo WASM. Essa biblioteca pode ser considerada um protótipo de uma possível futura versão do React, que em vez de implementar os mecanismos de reconciliação em JavaScript, uma linguagem dinâmica executada numa máquina virtual, o faz via WebAssembly, cujas instruções binárias podem ser capazes de atingir desempenho próximo ao nativo [4].
 
 Com o término desse desenvolvimento será possível realizar uma comparação de desempenho e consumo de memória entre duas aplicações (uma delas desenvolvida a partir do protótipo desse trabalho, e a outra a partir do React.js), e com isso investigar se o uso de WebAssembly seria realmente vantajoso para o React e quais as características ou limitações são responsáveis pela conclusão.
 
@@ -30,66 +26,133 @@ Com o término desse desenvolvimento será possível realizar uma comparação d
 
 Para simplificar, o protótipo desenvolvido será referido como Reactron a partir da próxima seção.
 
-### 3.2 Funcionalidades
+### 3.1 Objetivos
+Devido ao tempo limitado para o desenvolvimento do presente trabalho, o Reactron deverá ter um menor escopo de funcionalidades em relação ao que o React oferece atualmente, mas ainda assim buscará aplicar suas ideias principais de forma a tornar possível a existência de componentes cujos códigos possam ser compartilhados entre as duas bibliotecas com pouco esforço. 
 
-Assim como o React, o Reactron é uma biblioteca JavaScript. Logo, deve expor métodos para declaração de elementos a partir de JSX. O código JSX abaixo exemplifica a criação de um elemento `div`:
+#### 3.1.1. Criação e renderização de elementos
+O Reactron deve ser capaz de criar e manipular e renderizar elementos do DOM. A principal maneira de criar elementos, como um usuário da biblioteca, é utilizar o JSX [11], uma sintaxe semelhante ao HTML que facilita a declaração de elementos (o que será explicado na próxima seção). A árvore de elementos gerada pela aplicação pode ser renderizada inserindo os elementos como filhos de um elemento pré-existente no DOM utilizando a função `render`:
 
 ```js
-let element = <div></div>;
+let element = <h1>Hello world!</h1>;
+
+// Insere o elemento como filho da tag "body"
+render(element, document.getElementByTagName("body"));
 ```
 
-Fazendo a transpilação do código acima (já que não se trata de código JavaScript válido) por meio da ferramenta Babel, temos como resultado o seguinte código:
+#### 3.1.2. Componentização
+O Reactron deve permitir o agrupamento de elementos em componentes. De acordo com a documentação oficial do React, um componente é uma parte integrante da interface de usuário que deve ser independente das demais e também reutilizável, permitindo que o desenvolvedor da aplicação possa pensar em cada parte isoladamente [15]. Um componente é como uma função: ele recebe uma ou mais entradas e retorna uma descrição do que deve aparecer na tela [15]. As entradas do componente são conhecidas como "props" (propriedades) e torna possível customizar o seu comportamento. O retorno do componente, por sua vez, é uma árvore de elementos que representa a interface de usuário resultante em determinado momento e contexto.
+
+Assim como no React, componentes Reactron devem ser declarados com simples funções do JavaScript, e com a sintaxe JSX, podem ser instanciados como tags HTML:
 
 ```js
-let element = Reactron.createElement("div", null);
-```
-
-A função `createElement` faz parte da interface pública do Reactron e torna possĩvel a criação de elementos por meio de JSX. É possível aninhar vários elementos e ter estruturas mais complexas, assim como no HTML:
-
-```js
-let element = (
-  <main className="app">
-    <div className="topbar">
-      <a className="active" href="/home">Home</a>
-      <a href="/about">About us</a>
+function User(props) {
+  return (
+    <div className="user">
+      <img className="avatar" src={props.avatarUrl} />
+      <span>props.name</span>
     </div>
-  </main>
-);
-```
-
-Funções que retornam elementos podem ser utilizados como componentes:
-
-```js
-function Link({ href, active, children }) {
-  return (
-    <a className={active ? "active" : ""} href={link}>
-      {children}
-    </a>
   );
 }
 
-function App() {
+render(
+  <User name="Alice" avatarUrl="/users/alice.jpg" />,
+  document.getElementByTagName("body")
+);
+```
+
+Também é possível instanciar componentes dentro de outros componentes:
+
+```js
+function UserList(props) {
   return (
-    <main className="app">
-      <div className="topbar">
-        <Link href="/home" active={true}>Home</Link>
-        <Link href="/about" active={false}>About us</Link>
-      </div>
-    </main>
+    <div className="user-list">
+      <User name="Alice" avatarUrl="/users/alice.jpg" />
+      <User name="Bob" avatarUrl="/users/bob.jpg" />
+      <User name="Carol" avatarUrl="/users/carol.jpg" />
+    </div>
+  )
+}
+
+render(<UserList />, document.getElementByTagName("body"));
+```
+
+Compor diversos componentes é a principal estratégia no React para construir interfaces escaláveis e reutilizáveis, e esse mesmo padrão deve ser utilizado também no Reactron. No React há duas formas de declarar componentes: utilizando funções, como discutido acima, e também utilizando classes [16], porém o Reactron só deve suportar a declaração de componentes funcionais devido a sua maior simplicidade de implementação. Além disso, componentes funcionais são uma maneira mais elegante de escrever componentes React desde sua versão 16.8, com a introdução dos Hooks [12].
+
+#### 3.1.3. Estado
+No React, um componente pode conter estado, isto é, um conjunto de dados dinâmicos controlados pelo componente e persistidos entre várias renderizações. O estado normalmente é um objeto JavaScript que guarda todos os dados que o componente precisa, e ele pode ser modificado com o uso do método `setState`. Para criar estado em componentes funcionais é preciso usar o hook `useState` [12], uma função que retorna o estado inicial e também uma função que atualiza o valor do estado. Nesse caso, o estado não precisa necessariamente ser um objeto, já que `useState` pode ser utilizado várias vezes em um mesmo componente [12].
+
+O Reactron oferecer o hook `useState` como a principal forma de criar estado em componentes. Outros React hooks importantes para a manutenção do estado e do ciclo de vida, como o `useEffect` e o `useContext`, não serão implementados, visto que é possível criar aplicações simples o suficiente para cumprir o escopo do trabalho apenas com o `useState`.
+
+### 3.2 Interface pública da biblioteca
+Assim como o React, o Reactron será uma biblioteca JavaScript. Logo, o seu módulo deverá expor funções que serão utilizadas pelos usuários da biblioteca em aplicações a serem desenvolvidas com o Reactron. A interface pública da biblioteca deverá conter as seguintes funções:
+
+1. `createElement`
+2. `render`
+3. `useState`
+
+Cada uma delas será detalhada nas seguintes subseções.
+
+3.2.1 `createElement`
+`createElement` será responsável pela declaração de elementos que serão gerenciados pelo Reactron para a construção do layout da aplicação. Essa função não deve ser usada diretamente pelo usuário da biblioteca, pois um transpilador como o Babel [10] pode transformar a utilização da sintaxe JSX [11] para chamadas a `createElement`. O código JSX abaixo exemplifica a criação de um elemento:
+
+```js
+let element = <div className="greeting">Hello world!</div>;
+```
+
+Fazendo a transpilação do código acima (já que não se trata de código JavaScript válido) por meio do Babel, temos como resultado o seguinte código:
+
+```js
+let element = createElement("div", { className: "greeting" }, createElement("Hello world!"));
+```
+
+3.2.2 `render`
+`render`, como discutido anteriormente, renderiza os elementos na tela. Internamente, sua chamada informará ao virtual DOM a árvore de elementos que deverá ser renderizada e qual elemento já existente no DOM deverá conter essa árvore:
+
+```js
+let element = <div className="greeting">Hello world!</div>;
+let container = document.getElementByTagName("body");
+
+render(element, container);
+```
+
+A chamada a `render` terá o seguinte HTML como resultado:
+
+```html
+<html>
+  <body>
+    <div class="greeting">Hello world!</div>
+  </body>
+</html>
+```
+
+3.2.3. `useState`
+`useState` é um dos Hooks [12] introduzidos na versão 16.8 do React [5]. Hooks são funções utilitárias que permitem que componentes acessem funcionalidades importantes do React, como estado e ciclo de vida, o que até então era possível definindo componentes com classes JavaScript [12] (que se tornaram disponíveis com a especificação ECMA-262 a partir da versão ES6 [13][14]). O hook `useState` permite que um componente funcional possa conter e controlar dados dinâmicos que são persistidos a cada ciclo de renderização. O Reactron deve oferecer a função `useState` que terá o mesmo uso do React hook homônimo. Abaixo temos um exemplo de componente funcional que possui estado gerenciado pelo `useState`:
+
+```js
+function Example() {
+  const [count, setCount] = useState(0);
+
+  return (
+    <div>
+      <p>Você clicou {count} vezes</p>
+      <button onClick={() => setCount(count + 1)}>
+        Clique-me
+      </button>
+    </div>
   );
 }
 ```
 
-Para renderizar os componentes na página, é necessário usar a função `render`, que informará ao Reactron que o DOM deve ser manipulado para a exibição dos elementos criados:
+3.3 Arquitetura interna
 
-```js
-Reactron.render(
-  <App />,
-  document.querySelector("body"), // inserir os elementos na tag "body"
-);
-```
+O núcleo do Reactron é um módulo WebAssembly encarregado de guardar o contexto interno e executar todas as operações do virtual DOM:
 
+1. criação de elementos (`createElement`)
+2. processamento de elementos (`performWork`)
+3. reconciliação (`reconcile`)
+4. aplicação de mudanças no DOM (`commit`)
 
+Logo, a interface pública da biblioteca, apresentada na seção anterior, é apenas uma camada intermediária de código JavaScript que faz chamadas às funções internas do módulo WebAssembly.
 
 
 
@@ -107,3 +170,10 @@ high-level-goals/. Acesso em: 15 de setembro de 2020.
 [7] https://reactjs.org/docs/reconciliation.html
 [8] https://indepth.dev/inside-fiber-in-depth-overview-of-the-new-reconciliation-algorithm-in-react/
 [9] https://pomb.us/build-your-own-react/
+[10] https://babeljs.io/
+[11] https://pt-br.reactjs.org/docs/introducing-jsx.html
+[12] https://pt-br.reactjs.org/docs/hooks-intro.html
+[13] https://tc39.es/ecma262/#sec-class-definitions
+[14] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
+[15] https://reactjs.org/docs/components-and-props.html
+[16] https://reactjs.org/docs/components-and-props.html#function-and-class-components

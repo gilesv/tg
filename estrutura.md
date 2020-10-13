@@ -5,11 +5,22 @@
   1.3 Estrutura do Trabalho
 
 2. Contexto
-  2.1 Desenvolvimento de aplicações web
-    2.1.1 História do desenvolvimento front-end
-    2.1.1 Document Object Model (DOM)
-    2.1.2 React.js e outros frameworks
-    2.1.3 Virtual DOM
+  2.1 História do desenvolvimento front-end
+    - O que é a web, o que é um browser
+    - Guerra dos browsers, nascimento e crescimento do JavaScript
+    - Jquery e primeiros frameworks
+    - Atualmente (React, Angular, View)
+  
+  2.2 React
+    - História
+    - Princípios
+    - Funcionalidades
+    - Ecossistema
+    - Influência em outros frameworks
+
+  2.2 DOM vs. Virtual DOM
+    - O que é o DOM
+    - Reflows, repaints...
 
   2.2 WebAssembly
     2.2.1 História (JavaScript e asm.js)
