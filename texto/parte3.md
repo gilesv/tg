@@ -26,8 +26,8 @@ Com o término desse desenvolvimento será possível realizar uma comparação d
 
 Para simplificar, o protótipo desenvolvido será referido como Reactron a partir da próxima seção.
 
-### 3.1 Objetivos
-Devido ao tempo limitado para o desenvolvimento do presente trabalho, o Reactron deverá ter um menor escopo de funcionalidades em relação ao que o React oferece atualmente, mas ainda assim buscará aplicar suas ideias principais de forma a tornar possível a existência de componentes cujos códigos possam ser compartilhados entre as duas bibliotecas com pouco esforço. 
+### 3.1 Funcionalidades principais
+Devido ao tempo limitado para o desenvolvimento do presente trabalho, o Reactron deverá ter um menor escopo de funcionalidades em relação ao que o React oferece atualmente, mas ainda assim buscará aplicar suas ideias principais de forma a tornar possível a existência de componentes cujos códigos possam ser compartilhados entre as duas bibliotecas com pouco esforço. (TODO)
 
 #### 3.1.1. Criação e renderização de elementos
 O Reactron deve ser capaz de criar e manipular e renderizar elementos do DOM. A principal maneira de criar elementos, como um usuário da biblioteca, é utilizar o JSX [11], uma sintaxe semelhante ao HTML que facilita a declaração de elementos (o que será explicado na próxima seção). A árvore de elementos gerada pela aplicação pode ser renderizada inserindo os elementos como filhos de um elemento pré-existente no DOM utilizando a função `render`:
@@ -83,8 +83,8 @@ No React, um componente pode conter estado, isto é, um conjunto de dados dinâm
 
 O Reactron oferecer o hook `useState` como a principal forma de criar estado em componentes. Outros React hooks importantes para a manutenção do estado e do ciclo de vida, como o `useEffect` e o `useContext`, não serão implementados, visto que é possível criar aplicações simples o suficiente para cumprir o escopo do trabalho apenas com o `useState`.
 
-### 3.2 Interface pública da biblioteca
-Assim como o React, o Reactron será uma biblioteca JavaScript. Logo, o seu módulo deverá expor funções que serão utilizadas pelos usuários da biblioteca em aplicações a serem desenvolvidas com o Reactron. A interface pública da biblioteca deverá conter as seguintes funções:
+### 3.2 Módulo JavaScript
+Assim como o React, o Reactron será uma biblioteca JavaScript. Logo, o seu módulo deverá expor funções que serão utilizadas pelos usuários da biblioteca em aplicações a serem desenvolvidas com o Reactron. A interface pública do módulo JS deverá conter as seguintes funções:
 
 1. `createElement`
 2. `render`
@@ -143,23 +143,51 @@ function Example() {
 }
 ```
 
-3.3 Arquitetura interna
+### 3.3 Módulo WebAssembly
+O núcleo do Reactron será um módulo WebAssembly, responsável por guardar o contexto interno e executar todas as operações do virtual DOM. Com isso, as funções integrantes do módulo JS podem ser caracterizadas como uma fina camada de código JavaScript que servirá como intermediária às funções internas do módulo WebAssembly. Nessa camada há também uma série de funções utilitárias (geradas automaticamente pela ferramenta `wasm-bindgen` [17], detalhada na próxima seção) que permitem que o módulo WASM manipule o DOM (`createElement`, `appendChild`, `removeElement` e outras) e acesse APIs do navegador (como a função `requestIdleCallback`). Com a camada intermediária, os usuários da biblioteca não precisam lidar diretamente com o WebAssembly - que passa a ser um mero detalhe de implementação - e simplesmente fazem o uso de funções JavaScript. Essa configuração, além de manter boa coesão, também oferece o benefício: basta uma configuração específica no processo de build de uma aplicação para substituir o módulo WASM por polyfill [18] em JavaScript responsável pelo virtual DOM, assim mantendo a compatibilidade de aplicações que tem como alvo navegadores antigos que não possuem suporte à WebAssembly.
 
-O núcleo do Reactron é um módulo WebAssembly encarregado de guardar o contexto interno e executar todas as operações do virtual DOM:
+O funcionamento do virtual DOM pode ser descrito a partir dos seguintes passos:
 
-1. criação de elementos (`createElement`)
-2. processamento de elementos (`performWork`)
-3. reconciliação (`reconcile`)
-4. aplicação de mudanças no DOM (`commit`)
+#### 3.3.1. Criação de elementos (`createElement`)
+Cada chamada à função `createElement` do módulo JavaScript, realizadas a partir do uso de JSX, resultará em outra chamada ao método homônimo no módulo WASM, que irá alocar um novo objeto `VolatileElement` (um elemento vólatil que servirá apenas de base para a criação do virtual DOM) e retornará um ponteiro (um número inteiro) para ele. Assim, os elementos não são objetos JavaScript, mas sim bytes localizados na memória linear do WebAssembly. O motivo de ponteiros serem necessários é puramente técnico: evitar o custo da serialização/deserialização de objetos na "ponte" entre os módulos JS e WASM.
 
-Logo, a interface pública da biblioteca, apresentada na seção anterior, é apenas uma camada intermediária de código JavaScript que faz chamadas às funções internas do módulo WebAssembly.
+Resumidamente, o retorno de um componente Reactron é um ponteiro ao objeto `VolatileElement`. Chamadas subsequentes ao componente irão retornar ponteiros diferentes (devido a alocação de objetos diferentes):
+
+```js
+function Example() {
+  return <h1>Hello world</h1>;
+}
+
+console.log(<Example />); // => 1102354
+console.log(<Example />); // => 1102972
+```
+
+Para desencadear o próximo passo é necessário invocar a função `render` passando como parâmetro o ponteiro do elemento a ser renderizado e o elemento no qual inserir a árvore de elementos resultante.
+
+```js
+let element = <Example />;
+render(element, document.getElementById("root"));
+```
+
+#### 3.3.2. Processamento de elementos (`workLoop` e `performWork`)
+A função `render` do módulo JS realiza uma chamada à função homônima do módulo WebAssembly, que recebe o ponteiro do elemento a ser renderizado e começa o processo de criação ou manutenção do virtual DOM propriamente dito. No contexto do Reactron, o virtual DOM é uma árvore de objetos `Fiber` que perduram durante todo o ciclo de vida de uma aplicação. Cada `Fiber` representa um elemento do DOM. Na primeira chamada a `render`, para cada `VolatileElement` um novo `Fiber` é criado do zero e é anexado à árvore do virtual DOM.
+
+#### 3.3.3. Reconciliação (`reconcile`)
+Quando há mudanças de estado, a partir da utilização de `useState`, todos os componentes da aplicação são reinstanciados, produzindo uma nova árvore de objetos `VolatileElement`. Com isso, o processo de reconciliação inicia: os objetos `Fiber` da árvore do virtual DOM existente são utilizados para verificar se os novos `VolatileElement` resultantes dos componentes representam alguma mudança que possa alterar o layout da aplicação, como adições e deleções de elementos filhos ou atualizações de propriedades. Assim, todas as propriedades e elementos filhos são comparados. Quando uma mudança é detectada em um `Fiber`, ele é adicionado a uma lista de mudanças (também chamada de lista de efeitos). Após todos os fibers serem comparados com os objetos voláteis, a reconciliação termina.
+
+#### 3.3.4. Aplicação de mudanças no DOM (`performWork` e `commit`)
+A lista de mudanças resultante da reconciliação é uma descrição de todas as alterações que devem ser feitas no DOM real. Neste último passo, a função `performWork` do módulo WebAssembly itera sobre os fibers marcados com mudanças e invoca a função `commit` para cada um. `commit` irá utilizar as funções utilitárias do módulo JS para realizar cada mudança no DOM. Após esse processo, o DOM real e o virtual DOM estarão sincronizados e o controle de execução retorna à aplicação.
+
+### 3.4 Arquitetura geral
+
+O funcionamento geral do Reactron, incluindo o módulo JS e o módulo WASM, pode ser visualizado no seguinte diagrama:
+
+![Diagrama arquitetura Reactron](../images/diagrama-reactron.png)
+
+### 3.5 
 
 
-
-
-
-
-
+```
 [1] https://www.npmjs.com/package/react
 [2] ?
 [3] https://github.com/facebook/react/issues/7942#issuecomment-254984862
@@ -177,3 +205,6 @@ high-level-goals/. Acesso em: 15 de setembro de 2020.
 [14] https://developer.mozilla.org/en-US/docs/Web/JavaScript/Reference/Classes
 [15] https://reactjs.org/docs/components-and-props.html
 [16] https://reactjs.org/docs/components-and-props.html#function-and-class-components
+[17] https://github.com/rustwasm/wasm-bindgen
+[18] https://developer.mozilla.org/pt-BR/docs/Glossario/Polyfill
+```
