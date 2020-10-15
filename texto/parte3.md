@@ -14,15 +14,15 @@
 
 ### 3. Desenvolvimento
 
-A biblioteca React.js é, atualmente, uma das mais utilizadas para o desenvolvimento de aplicações front-end, tendo mais de 8 milhões de downloads semanais no NPM [1]. Com um grande número de projetos utilizando-o como dependência, a expectativa é que o React seja uma ferramenta estável à longo prazo, capaz de se manter atualizada com novos padrões e tecnologias, e, ao mesmo tempo, sem "breaking changes" (mudanças na interface pública da biblioteca), o que facilitará o processo de upgrade de versão em aplicações legadas.
+A biblioteca React.js é, atualmente, uma das mais utilizadas para o desenvolvimento de aplicações front-end, tendo mais de 8 milhões de downloads semanais no NPM [1]. Com um grande número de projetos utilizando-o como dependência, a expectativa é que o React seja uma ferramenta estável à longo prazo, capaz de manter-se atualizada com novos padrões e tecnologias, e, ao mesmo tempo, sem "breaking changes" (mudanças na interface pública da biblioteca), o que facilita o processo de atualização de versão em aplicações legadas.
 
-Tendo a tecnologia WebAssembly se mostrado vantajosa em questões de desempenho em vários casos de uso [2], imagina-se que futuramente sua possível integração na base de código do React ou de outras bibliotecas e frameworks possa ser benéfica, e ainda mais caso seu uso possa oferecer vantagens sem a necessidade de breaking changes. Atualmente a utilização de Wasm no React.js ainda não está em discussão, apesar de cogitada [3], visto que a tecnologia ainda encontra-se em seus primeiros passos.
+Tendo a tecnologia WebAssembly se mostrado vantajosa em questões de desempenho em vários casos de uso [2], imagina-se que futuramente sua possível integração na base de código do React ou de outras bibliotecas e frameworks possa ser benéfica, e ainda mais caso seu uso possa oferecer vantagens sem a necessidade de breaking changes. Atualmente a utilização de WASM no React.js ainda não está em discussão (apesar de cogitada [3]) visto que a tecnologia ainda encontra-se em seus primeiros passos.
 
-Assim, com base em todo o contexto técnico detalhado nos capítulos anteriores, este trabalho propõe a implementação de uma biblioteca de desenvolvimento de interfaces de usuário (front-end) na linguagem JavaScript, baseada no React.js, que seja capaz de delegar as operações complexas de seu virtual DOM para um módulo WASM. Essa biblioteca pode ser considerada um protótipo de uma possível futura versão do React, que em vez de implementar os mecanismos de reconciliação em JavaScript, uma linguagem dinâmica executada numa máquina virtual, o faz via WebAssembly, cujas instruções binárias podem ser capazes de atingir desempenho próximo ao nativo [4].
+Assim, com base em todo o contexto técnico detalhado nos capítulos anteriores, este trabalho propõe a implementação de uma biblioteca de desenvolvimento de interfaces de usuário na linguagem JavaScript, baseada no React.js, que seja capaz de delegar as operações complexas de seu virtual DOM para um módulo WASM. Essa biblioteca pode ser considerada um protótipo de uma possível futura versão do React, que em vez de implementar os mecanismos de reconciliação em JavaScript, uma linguagem dinâmica executada numa máquina virtual, o faz via WebAssembly, cujas instruções binárias podem ser capazes de atingir desempenho próximo ao nativo [4].
 
 Com o término desse desenvolvimento será possível realizar uma comparação de desempenho e consumo de memória entre duas aplicações (uma delas desenvolvida a partir do protótipo desse trabalho, e a outra a partir do React.js), e com isso investigar se o uso de WebAssembly seria realmente vantajoso para o React e quais as características ou limitações são responsáveis pela conclusão.
 
-É importante ressaltar que o React não possui, pelo menos publicamente, uma especificação técnica de implementação. Logo, a construção do protótipo foi realizada com base na análise do código-fonte do React.js (a partir de seu repositório no Github [6]) e em sua documentação oficial [7], onde se explica em alto nível como ocorre o processo de reconciliação. Além disso, outros materiais de referência técnica foram de suma importância para a conclusão do protótipo, como os blogposts "Inside Fiber: in depth overview of the new reconciliation algorithm in React", de Max Koretskyi [8] e "Build Your Own React", de Rodrigo Pombo [9], que exploram mais a fundo o funcionamento interno do React.
+É importante ressaltar que o React não possui, pelo menos publicamente, uma especificação técnica de implementação. Logo, a construção do protótipo foi realizada com base na análise do código-fonte do React.js (a partir de seu repositório no Github [6]) e em sua documentação oficial [7], onde explica-se em alto nível como ocorre o processo de reconciliação. Além disso, outros materiais de referência técnica foram de suma importância para a conclusão do protótipo, como os blogposts "Inside Fiber: in depth overview of the new reconciliation algorithm in React", de Max Koretskyi [8] e "Build Your Own React", de Rodrigo Pombo [9], que exploram mais a fundo o funcionamento interno do React.
 
 Devido ao tempo limitado para o desenvolvimento do presente trabalho, o protótipo implementará apenas um subconjunto das funcionalidades que o React oferece atualmente. Porém, ainda será possível aplicar seus princípios de forma a tornar possível a existência de componentes cujos códigos possam ser compartilhados entre as duas bibliotecas com mudanças mínimas. Uma lista de funcionalidades do React que não fazem parte do escopo pode ser lida na seção (TODO: seção não-objetivos) Para fins de simplificação, o protótipo desenvolvido será referido como Reactron a partir da próxima seção.
 
@@ -30,7 +30,7 @@ Devido ao tempo limitado para o desenvolvimento do presente trabalho, o protóti
 Usuários hipotéticos do Reactron que utilizem-no para desenvolver aplicações devem esperar que ele seja capaz de realizar três tarefas básicas: manipulação do DOM, componentização e criação de estado local, as quais serão descritas com mais detalhes nas subseções seguintes.
 
 #### 3.1.2. Manipulação do DOM
-O Reactron deve ser capaz de criar, atualizar e remover elementos no DOM automaticamente, de acordo com o que é definido pelo usuário. Elementos são blocos de construção do layout da aplicação. A principal maneira de declarar elementos, como um usuário da biblioteca, é utilizar o JSX [11], uma sintaxe semelhante ao HTML que facilita a construção de layouts. Toda aplicação desenvolvida com o React, e também o Reactron, deve gerar uma árvore de elementos que serão processados e renderizados, e isso se dará inserindo-os como filhos de um elemento pré-existente no DOM utilizando a função `render`:
+O Reactron deve ser capaz de criar, atualizar e remover elementos no DOM automaticamente, de acordo com o que é definido pelo usuário. Elementos são os blocos mais básicos de construção do layout da aplicação. A principal maneira de declarar elementos, como um usuário da biblioteca, é utilizar o JSX [11], uma sintaxe semelhante ao HTML que facilita a construção de layouts. Toda aplicação desenvolvida com o React, e também o Reactron, deve gerar uma árvore de elementos que serão processados e renderizados, e isso se dará inserindo-os como filhos de um elemento pré-existente no DOM utilizando a função `render`:
 
 ```js
 let element = <h1>Hello world!</h1>;
@@ -88,7 +88,7 @@ No React, um componente pode conter estado, isto é, um conjunto de dados dinâm
 O Reactron deve oferecer o hook `useState` como a principal forma de criar estado local em componentes, concluindo a tríade das tarefas básicas de responsabilidade da biblioteca. Dessa forma, uma aplicação desenvolvida com o Reactron será capaz de construir seu layout e manipulá-lo para refletir seu estado.
 
 ### 3.2 Funcionalidades fora de escopo
-O React oferece diversas outras funcionalidades além das discutidas anteriormente, mas elas não se encontrarão dentro do escopo do que será implementado no Reactron devido ao tempo restrito para o desenvolvimento do protótipo. As principais funcionalidades fora do escopo do Reactron são:
+O React oferece diversas outras funcionalidades além das discutidas anteriormente, mas nem todas se encontrarão dentro do escopo do que será implementado no Reactron devido ao tempo restrito para o desenvolvimento do protótipo. As principais funcionalidades fora do escopo do Reactron são:
 
 * Componentes via classes: componentes no React também podem ser declarados como classes ES6 [16]. No Reactron apenas componentes funcionais serão suportados;
 * Ciclo de vida: classes no React permitem o uso de métodos importantes como `componentDidMount` e `shouldComponentUpdate`, que fazem parte do ciclo de vida de um componente [19]. Isso não será suportado pelo Reactron.
@@ -99,10 +99,9 @@ O React oferece diversas outras funcionalidades além das discutidas anteriormen
 * Outros Hooks: Alguns hooks importantes para a manutenção do estado e do ciclo de vida, como o `useEffect` e o `useContext`, e outros menos comuns como `useCallback`, `useReducer` e `useMemo` [25], estarão fora do escopo do Reactron, visto que para o desenvolvimento de aplicações simples o `useState` é suficiente.
 * Modo concorrente: Até o momento do desenvolvimento desse trabalho, o concurrent mode do React ainda está em fase experimental [26]. De qualquer forma, também não será implementado no Reactron.
 
-
 ### 3.3 Arquitetura e funcionamento interno
 
-O Reactron será utilizada por usuários como uma biblioteca JavaScript comum, podendo ser instalada por meio do gerenciador de pacotes NPM [22], mas seu objetivo final é delegar as operações complexas do virtal DOM a um módulo WebAssembly. Logo, sua arquitetura interna foi elaborada de forma a tornar possível que dois agentes, o corpo de código JavaScript e o módulo WebAssembly, possam trabalhar em conjunto. Essa arquitetura pode ser resumida no seguinte diagrama, que será detalhado nas próximas seções
+O Reactron será utilizada por usuários como uma biblioteca JavaScript comum, podendo ser instalada por meio do gerenciador de pacotes NPM [22], mas seu objetivo final é delegar as operações complexas do virtal DOM a um módulo WebAssembly. Logo, sua arquitetura interna foi elaborada de forma a tornar possível que dois agentes, o corpo de código JavaScript e o módulo WebAssembly, possam trabalhar em conjunto. Essa arquitetura pode ser resumida no seguinte diagrama, que será detalhado nas próximas seções:
 
 ![Diagrama arquitetura Reactron](../images/diagrama-reactron.png)
 
@@ -174,7 +173,7 @@ load().then(() => {
 ```
 
 ### 3.3.2 Módulo WebAssembly
-O núcleo do Reactron será um módulo WebAssembly, responsável por guardar o contexto interno e executar todas as operações do virtual DOM. O funcionamento do virtual DOM juntamente com as principais funções desse módulo podem ser descritos a partir dos seguintes passos:
+O núcleo do Reactron será um módulo WebAssembly, responsável por guardar o contexto interno e executar todas as operações do virtual DOM. O funcionamento do virtual DOM, juntamente com as principais funções desse módulo, podem ser descritos a partir dos seguintes passos:
 
 #### 3.3.2.1. Criação de elementos (`createElement`)
 Cada chamada à função `createElement` do módulo JavaScript, realizadas a partir do uso de JSX, resultará em outra chamada ao método homônimo no módulo WASM, que irá alocar um novo objeto `VolatileElement` (um elemento vólatil que servirá apenas de base para a criação do virtual DOM) e retornará um ponteiro (um número inteiro) para ele. Assim, os elementos não são objetos JavaScript, mas sim bytes localizados na memória linear do WebAssembly. O motivo de ponteiros serem necessários é puramente técnico: evitar o custo da serialização/deserialização de objetos na "ponte" entre os módulos JS e WASM.
@@ -198,7 +197,7 @@ render(element, document.getElementById("root"));
 ```
 
 #### 3.3.2.2. Processamento de elementos (`workLoop` e `performWork`)
-A função `render` do módulo JS realiza uma chamada à função homônima do módulo WebAssembly, que recebe o ponteiro do elemento a ser renderizado e começa o processo de criação ou manutenção do virtual DOM propriamente dito. No contexto do Reactron, o virtual DOM é uma árvore de objetos `Fiber` que perduram durante todo o ciclo de vida de uma aplicação. Cada `Fiber` representa um elemento do DOM. Na primeira chamada a `render`, para cada `VolatileElement` um novo `Fiber` é criado do zero e é anexado à árvore do virtual DOM.
+A função `render` do módulo JS realiza uma chamada à função homônima do módulo WebAssembly, que recebe o ponteiro do elemento a ser renderizado e começa o processo de criação ou manutenção do virtual DOM propriamente dito. No contexto do Reactron, o virtual DOM é uma árvore de objetos `Fiber` que perdura durante todo o ciclo de vida de uma aplicação. Cada `Fiber` representa um elemento do DOM. Na primeira chamada a `render`, para cada `VolatileElement` um novo `Fiber` é criado do zero e é anexado à árvore do virtual DOM.
 
 #### 3.3.2.3. Reconciliação (`reconcile`)
 Quando há mudanças de estado, a partir da utilização de `useState`, todos os componentes da aplicação são reinstanciados, produzindo uma nova árvore de objetos `VolatileElement`. Com isso, o processo de reconciliação inicia: os objetos `Fiber` da árvore do virtual DOM existente são utilizados para verificar se os novos `VolatileElement` resultantes dos componentes representam alguma mudança que possa alterar o layout da aplicação, como adições e deleções de elementos filhos ou atualizações de propriedades. Assim, todas as propriedades e elementos filhos são comparados. Quando uma mudança é detectada em um `Fiber`, ele é adicionado a uma lista de mudanças (também chamada de lista de efeitos). Após todos os fibers serem comparados com os objetos voláteis, a reconciliação termina.
@@ -207,12 +206,14 @@ Quando há mudanças de estado, a partir da utilização de `useState`, todos os
 A lista de mudanças resultante da reconciliação é uma descrição de todas as alterações que devem ser feitas no DOM real. Neste último passo, a função `performWork` do módulo WebAssembly itera sobre os fibers marcados com mudanças e invoca a função `commit` para cada um. `commit` irá utilizar as funções utilitárias do módulo JS para realizar cada mudança no DOM. Após esse processo, o DOM real e o virtual DOM estarão sincronizados e o controle de execução retorna à aplicação.
 
 ### 3.4 Ferramentas de desevolvimento
+O módulo WASM integrante do protótipo foi desenvolvido na linguagem Rust [28] devido ao seu foco em performance e confiabilidade, além de seu amplo suporte ao desenvolvimento de WebAssembly [29]. Foram utilizadas várias ferramentas de seu ecossistema, como as bibliotecas `wasm-bindgen` [30] (geração automática de código intermediário entre JS e WASM), `web_sys` e `js_sys` (APIs Web e JavaScript via WebAssembly), e o utilitário de linha de comando `wasm-pack` [31] (simplificação do processo de desenvolvimento WebAssembly com Rust).
 
-#### 3.4.1. Rust
-O módulo WASM integrante do protótipo foi desenvolvido na linguagem Rust [28] devido ao seu foco em performance e confiabilidade, além do seu amplo e avançado suporte ao desenvolvimento de WebAssembly [29]. Foram utilizadas várias ferramentas de seu ecossistema, como as bibliotecas `wasm-bindgen` [30] (geração automática de código intermediário entre JS e WASM), `web_sys` e `js_sys` (APIs Web e JavaScript via WebAssembly), e o utilitário de linha de comando `wasm-pack` [31] (simplificação do processo de desenvolvimento WebAssembly com Rust).
+O Babel é um compilador de JavaScript de código-aberto [32] que permite utilizar versões mais recentes da linguagem sem a necessidade de lidar diretamente com a compatibilidade com navegadores que não suportam funcionalidades novas - o compilador transforma uma funcionalidade não suportada em algo equivalente numa versão mais antiga do JavaScript [33]. Existem diversos plugins e presets para o Babel, e um deles, o `preset-react` [34] foi utilizado no Reactron para fazer a transformação da sintaxe JSX em chamadas à função `createElement`.
 
-#### 3.4.2. Webpack, Babel 
-A ferramenta Webpack
+O Webpack [35] é outra ferramenta amplamente usada no ecossistema JavaScript como empacotador de módulos, sendo capaz de unir arquivos de diferentes extensões em um único bundle (pacote). O Webpack é utilizado hoje, por padrão, no `create-react-app` [37], em conjunto com o Babel, e também foi usado no empacotamento do Reactron. A sua estratégia de importação dinâmica [36] de módulos foi essencial para o carregamento do módulo WebAssembly junto ao código JavaScript.
+
+### 3.5 Resultado do desenvolvimento
+O desenvolvimento da biblioteca Reactron durou aproximadamente 3 meses, sendo a maior parte desse tempo dedicada à construção do módulo WebAssembly. Seu código-fonte é aberto na Licença MIT [https://github.com/gilesv/fusion/blob/master/LICENSE] e pode ser encontrado no repositório https://github.com/gilesv/fusion. No mesmo repositório também há uma aplicação de teste, uma implementação da aplicação TodoMVC [40], desenvolvida com o uso do Reactron e que será utilizada para os testes de desempenho cujos resultados estão detalhados no próximo capítulo.
 
 ```
 [1] https://www.npmjs.com/package/react
@@ -247,4 +248,12 @@ high-level-goals/. Acesso em: 15 de setembro de 2020.
 [29] https://www.rust-lang.org/pt-BR/what/wasm
 [30] https://github.com/rustwasm/wasm-bindgen
 [31] https://github.com/rustwasm/wasm-pack
+[32] https://babeljs.io/
+[33] https://github.com/babel/babel#intro
+[34] https://babeljs.io/docs/en/babel-preset-react
+[35] https://webpack.js.org/
+[36] https://webpack.js.org/guides/code-splitting/#dynamic-imports
+[37] https://pt-br.reactjs.org/docs/create-a-new-react-app.html#create-react-app
+[40] http://todomvc.com/
+
 ```
