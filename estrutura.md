@@ -5,38 +5,15 @@
   1.2 Objetivo
   1.3 Estrutura do Trabalho
 
-2. Contexto
-  2.1 Panorama do desenvolvimento web
-    - História da Web (primeiros anos)
-    - Arquitetura client side (HTTP, HTML, CSS)
-    - Browser, DOM e renderização
-    - Surgimento do JavaScript
-    - Aplicações web hoje, frameworks
-
+2. Contexto **In progress**
+  2.1 Uma breve história do desenvolvimento web
   2.2 React e o Virtual DOM
-    - História
-    - Princípios
-    - Funcionalidades
-    - Ecossistema
-    - Influência em outros frameworks
+  2.3 WebAssembly
 
-  2.2 WebAssembly
-    2.2.1 História (JavaScript e asm.js)
-    2.2.2 Características técnicas
-    2.2.3 Linguagens e Ferramentas
-    2.2.4 Aplicação em Virtual DOMs (bibliotecas existentes)
-
-3. Desenvolvimento da biblioteca
+3. Desenvolvimento da biblioteca **OK**
   3.1 Objetivos
-    3.1.1 Suporte a API do React (render e hooks)
-    3.1.2 Uso de um módulo WebAssembly no diffing
   3.2 Ferramentas utilizadas
-    3.2.1 Rust
-    3.2.2 Wasmpack
-    3.2.3 Webpack
   3.3 Resultado do desenvolvimento
-    3.3.1 Diagrama da solução
-    3.3.2 Caso de uso: aplicação TodoMVC
 
 4. Metodologia da Análise comparativa
   4.1 Objetivos

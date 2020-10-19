@@ -1,13 +1,28 @@
+```
+2.1 Uma breve história do desenvolvimento web
+    - Surgimento da web
+    - Aplicações estáticas (HTTP, HTML, CSS)
+    - Surgimento do JavaScript
+    - AJAX
+    - Jquery e primeiros frameworks
+    - Single Page Applications
+    - Atualmente: react, angular, vue, svelte
 
-2.1 Panorama do desenvolvimento web
-  - História da Web (primeiros anos)
-  - Arquitetura client side (HTTP, HTML, CSS)
-  - Browser, DOM e renderização
-  - Surgimento do JavaScript
-  - Aplicações web hoje, frameworks
+2.2 React e o Virtual DOM
+    - Princípios
+    - Funcionalidades
+    - Ecossistema
+    - Como funciona o Virtual DOM
 
+2.3 WebAssembly
+    - História (JavaScript e asm.js)
+    - Características técnicas
+    - Linguagens
+    - Casos de uso
+    - Aplicação em Virtual DOMs (bibliotecas existentes)
+```
 
-### História da Web
+### 2.1 Uma breve história do desenvovimento web
 A World Wide Web foi criada em 1989 por Tim Berners-Lee [1], na época um
 cientista da computação na CERN, com o objetivo de agregar e compartilhar
 informações antes que fossem perdidas [2][3]. A proposta era criar uma "teia" de
@@ -43,7 +58,7 @@ documento HTML permitia que a página tivesse seu conteúdo modificado sem a
 necessidade de uma requisição ao servidor ou carregamento de uma nova página
 [6]. Esse era o nascimento das técnicas de DHTML (Dynamic HTML), que na prática
 se tratava de manipular, por meio do JavaScript, uma estrutura de dados
-gerenciada pelo navegador chamada de Document Object Model (DOM).
+gerenciada pelo navegador chamada de Document Object Model (DOM) [9].
 De acordo com a World Wide Web Consortium [10], é uma interface que permite o
 acesso e atualização de conteúdo, estrutura e estilos de documentos HTML, e
 garante que as alterações realizadas sejam incorporadas de volta à página.
@@ -61,8 +76,10 @@ amplitude de interações e responsividade aos usuários [7][8].
 
 A demanda por melhorias na Web levou ao surgimento de um novo padrão
 de desenvolvimento de aplicações: o AJAX (Asynchronous JavaScript
-and XML) [8]. A técnica não se tratava de uma nova tecnologia, mas sim uma junção
-revolucionária de várias tecnologias já existentes no mercado [7][8]:
+and XML) [8], caracterizada por trazer mais processamento e lógica de negócio
+para o cliente conferindo melhor desempenho e responsividade. A técnica
+não se tratava de uma nova tecnologia, mas sim uma junção inovadora de
+várias tecnologias já existentes no mercado [7][8]:
 
 * Formatação, estilização de conteúdo e interatividade: HTML, CSS e JavaScript;
 * Atualização dinâmica e interação com o conteúdo: Document Object Model (DOM);
@@ -74,10 +91,24 @@ dados aplicando-os na página, que era atualizada imediatamente sem a necessidad
 de recarregamento, o que trazia uma experiência bem mais fluida na
 web. Aplicações como o Gmail e Google Maps foram pioneiras na utilização de AJAX
 [7] e o padrão rapidamente se tornou uma tendência em aplicações de grandes
-empresas (Google, Flickr, Amazon e várias outras [8]).  wijei Finalmente a web
-ganhava dinâmicas comparáveis a aplicações desktop, com maior responsividade e interatividade.
+empresas (Google, Flickr, Amazon e várias outras [8]). Finalmente a web
+ganhava dinâmicas comparáveis a aplicações desktop, com maior responsividade e
+interatividade, e se tornava uma plataforma digna de aplicações de grande porte.
 
+A figura mostra as diferenças de funcionamento de uma aplicação tradicional e
+outra baseada em AJAX:
 
+![Diagrama AJAX](../images/diagrama_ajax.png)
+
+Em (A), uma aplicação web tradicional, requisições HTTP são enviadas a cada
+interação do usuário. O servidor devolve uma nova página HTML ao cliente, que a
+recebe e carrega o conteúdo seu conteúdo na tela [7]. A aplicação permanece
+inutilizável caso a nova página seja grande ou a conexão esteja lenta, piorando
+a experiência de uso. Numa aplicação AJAX (B), na qual todas as operações são
+gerenciadas por JavaScript no navegador (client-side), o usuário não precisa esperar por
+recarregamentos a cada interação. A aplicação manipula a própria interface enquanto lida com
+interações, e caso necessite de comunicação com o servidor, o faz em segundo
+plano, de forma assíncrona, permanecendo disponível para mais interações [7][8].
 
 
 
