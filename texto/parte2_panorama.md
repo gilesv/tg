@@ -1,5 +1,5 @@
 ```
-2.1 Uma breve história do desenvolvimento web
+2.1 Uma breve história do desenvolvimento web [OK]
     - Surgimento da web
     - Aplicações estáticas (HTTP, HTML, CSS)
     - Surgimento do JavaScript
@@ -8,13 +8,16 @@
     - Single Page Applications
     - Atualmente: react, angular, vue, svelte
 
-2.2 React e o Virtual DOM
+2.2 React.js
     - Princípios
     - Funcionalidades
     - Ecossistema
-    - Como funciona o Virtual DOM
 
-2.3 WebAssembly
+2.3 DOM vs. Virtual DOM
+    - Como funciona o DOM
+    - Como funciona o Virtual DOM no React
+
+2.4 WebAssembly
     - História (JavaScript e asm.js)
     - Características técnicas
     - Linguagens
@@ -87,9 +90,9 @@ várias tecnologias já existentes no mercado [7][8]:
 * Requisições HTTP para transferência assíncrona de dados: XMLHttpRequest;
 
 Aplicações desenvolvidas com o padrão AJAX eram capazes de criar ou recuperar
-dados aplicando-os na página, que era atualizada imediatamente sem a necessidade
-de recarregamento, o que trazia uma experiência bem mais fluida na
-web. Aplicações como o Gmail e Google Maps foram pioneiras na utilização de AJAX
+dados realizando requisições ao servidor sem provocar um recarregamento da
+página, o que trazia uma experiência bem mais fluida na web. Aplicações como o
+Gmail e Google Maps foram pioneiras na utilização de AJAX
 [7] e o padrão rapidamente se tornou uma tendência em aplicações de grandes
 empresas (Google, Flickr, Amazon e várias outras [8]). Finalmente a web
 ganhava dinâmicas comparáveis a aplicações desktop, com maior responsividade e
@@ -110,6 +113,54 @@ recarregamentos a cada interação. A aplicação manipula a própria interface 
 interações, e caso necessite de comunicação com o servidor, o faz em segundo
 plano, de forma assíncrona, permanecendo disponível para mais interações [7][8].
 
+Essa nova maneira de projetar e construir aplicações web expôs tornou mais comum o uso
+extensivo de diversas tecnologias e APIs cujas implementações não eram
+compatíveis entre navegadores ou simplesmente não eram suportadas [7][11].
+Para diminuir o esforço adicional de garantir uma mínima
+compatibilidade entre os navegadores e melhorar a manutenabilidade do código,
+surgem os frameworks JavaScript: bibliotecas de código aberto que  abstraiam os diferentes
+comportamentos dos navegadores, expondo funções utilitárias e criando padrões de
+projeto para acelerar o desenvolvimento de aplicações [11]. Um das bibliotecas
+mais utilizadas foi o jQuery [13], que tendo como lema *write less, do more*
+(escreva menos, faça mais), oferecia uma série de utilitários de suporte a
+manipulação do DOM, animações, AJAX e outros [12], além de abstrair o suporte
+dos navegadores a essas funcionalidades.
+
+Com o passar dos anos e a crescente maturação da plataforma web, o uso de AJAX
+foi sendo aperfeiçoado e pouco a pouco novos frameworks JavaScript eram criados para
+diminuir a complexidade de aplicações construídas com jQuery e outras
+bibliotecas [13][14]. Surgiam ferramentas como o Backbone.js, Knockout.js e
+Angular.js [14] com estratégias de mover cada vez mais lógica de negócio e
+dados para o cliente de forma a diminuir o processamento no servidor [13], além
+de abstrair ainda mais a manipulação do DOM. Era o nascimento das
+*single-page applications* (SPA) [14][15], aplicações executadas em sua totalidade no
+lado do cliente e não requerem nenhum recarregamento, minimizando ainda mais o tempo de
+resposta para qualquer interação [16].
+
+Atualmente, a utilização do padrão SPA está altamente difundido e as aplicações
+web são grandes e complexas, contendo uma grande quantidade de dados e regras de
+negócio e fazendo uso extensivo de JavaScript [16]. Para esse fim, frameworks e
+bibliotecas ainda são utilizados, sendo os mais importantes o Angular, React.js
+e Vue.js [17]. Esse trabalho terá como foco a biblioteca React.js e o funcionamento de seu mecanismo
+interno, o virtual DOM, será discutido na próxima seção.
+
+2.3 DOM vs. Virtual DOM
+
+Como discutido anteriormente, o Document Object Model (DOM) é uma
+API presente nos navegadores que permite o acesso e atualização do
+conteúdo e aparência de e uma página web por meio de JavaScript, sendo uma peça chave para a
+interatividade na web [10][18]. Também faz parte desse componente uma representação em memória da
+página HTML baseada em objetos manipuláveis por meio de métodos providos pela
+API [14]. O DOM pode ser compreendido como um agrupamento hierárquico de
+objetos ou uma árvore, na qual cada nó representa um elemento HTML e possui
+atributos que correspondem a atributos HTML [14] e métodos que permitem sua
+manipulação [18]. Essa árvore é gerada internamente pelo navegador ao realizar a
+leitura de um documento HTML e representa a estrutura ou estado de uma página [18].
+A figura abaixo descreve como um documento HTML pode ser mapeado para um DOM:
+
+
+
+
 
 
 
@@ -123,3 +174,14 @@ plano, de forma assíncrona, permanecendo disponível para mais interações [7]
 [8] Ajax: A new approach to web applications (Jesse James Garrett)
 [9] DHTML Utopia
 [10] W3C: DOM https://dom.spec.whatwg.org/#what
+[11] MooTools essentials
+[12] jquery https://jquery.com/
+[13] The Performance Analysis of Web Apps based on virtual dom and reactive user
+interfaces
+[14] How does the virtual DOM compares
+[15] Comparison of Single-Page Application Frameworks
+[16] Building user interfaces using virtual DOM A comparison 
+[17] State of JS 2019: Frameworks
+https://2019.stateofjs.com/front-end-frameworks/
+
+[18] JavaScript DOM manipulation performance Comparing...
