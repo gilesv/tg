@@ -5,7 +5,9 @@
     - Surgimento do JavaScript
     - AJAX
     - Jquery e primeiros frameworks
-    - Single Page Applications
+
+2.2 Single Page Applications
+    - Modelo
     - Atualmente: react, angular, vue, svelte
 
 2.2 React.js
@@ -139,12 +141,67 @@ resposta para qualquer interação [16].
 
 Atualmente, a utilização do padrão SPA está altamente difundido e as aplicações
 web são grandes e complexas, contendo uma grande quantidade de dados e regras de
-negócio e fazendo uso extensivo de JavaScript [16]. Para esse fim, frameworks e
-bibliotecas ainda são utilizados, sendo os mais importantes o Angular, React.js
-e Vue.js [17]. Esse trabalho terá como foco a biblioteca React.js e o funcionamento de seu mecanismo
-interno, o virtual DOM, será discutido na próxima seção.
+negócio e fazendo uso extensivo de JavaScript [16]. Na próxima seção, será
+detalhado o funcionamento de single page applications e as principais ferramentas.
 
-2.3 DOM vs. Virtual DOM
+### 2.2 Single Page Applications e ferramentas
+Como visto anteriormente, o desenvolvimento de aplicações web vem priorizando
+cada vez mais práticas que trazem o processamento e renderização ao lado do
+cliente (client-side) oposto ao antigo modelo rudimentar de processamento
+realizado somente ao lado do servidor (server-side). Esse conjunto de novas compreensões foi
+consolidado no que é chamado de single page application (SPA) [20]. Desde então,
+surgiu uma nova geração de ferramentas para suportar o desenvolvimento dessas
+aplicações, sendo o Angular, o React.js e o Vue.js as principais [17].
+
+De acordo com Mikito Takada [21], uma SPA possui uma experiência de usuário mais
+próxima de uma aplicação nativa (desktop) devido a sua capacidade de atualizar qualquer parte da
+interface de usuário sem a necessidade de comunicar-se com um servidor. Esse
+tipo de aplicação contém toda a lógica de negócio necessária para gerenciar seus
+dados e sua interface de usuário localmente, dessa forma menos comunicações com
+o servidor são necessárias para reagir a interações [16]. Atualmente, as principais redes sociais como
+Facebook, Twitter e Instagram são SPAs [20].
+
+Uma das primeiras ferramentas que pavimentaram o caminho para a adoção de SPAs
+foi o AngularJS, lançado em 2010 [18]. Esse framework foi um dos primeiros a introduzir o conceito de
+data-binding bidirecional [14], que permitia relacionar variáveis JavaScript a
+elementos HTML resultando em atualizações de página automáticas a cada mudança de valor
+da variável [14]. Tal abstração da manipulação do DOM permitiu que os
+desenvolvedores focassem mais nas funcionalidades da aplicação do que nos
+desafios técnicos de sua implementação. Para detectar mudanças em dados e
+refleti-las no HTML, o AngularJS utilizava a técnica dirty checking [16], na
+qual são realizadas comparações periódicas nos dados da aplicação à procura de
+mudanças. Um dado é classificado como "sujo" caso uma modificação em seu valor
+tenha sido detectada, assim as partes da interface que dependem de seu valor
+podem ser notificadas e atualizadas [16][22]. Um ciclo de dirty checking é
+custoso, pois faz necessário percorrer todos os dados observáveis da aplicação e
+compará-los a seus valores anteriores, logo uma série de otimizações são
+realizadas pelo AngularJS para que o algoritmo de checagem seja eficiente [16]. 
+
+Em 2013 foi apresentado o React.js [14], uma ferramenta desenvolvida por
+engenheiros do Facebook para resolver um problema interno: manter a interface de
+usuário sincronizada com a lógica de negócio e os dados de aplicações em larga
+escala [23]. Um dos principais diferenciais do React.js é a abstração da
+manipulação do DOM por meio de uma estrutura de dados conhecida
+como Virtual DOM, com a qual seu algoritmo pode detectar mudanças na interface e
+aplicá-las em lote no DOM real com o mínimo de impacto em seu desempenho
+[14][23]. Um virtual DOM é uma representação do DOM composta por objetos
+JavaScript, que é gerada a cada interação. Mudanças na interface podem ser
+detectadas com o algoritmo de **reconciliação** [24], que compara um novo virtual DOM
+a outro pré-existente [18]. O resultado é o conjunto mínimo de mudanças a serem realizadas
+no DOM para sincronizá-lo ao virtual DOM mais recente [16]. A técnica do virtual DOM
+se diferencia do dirty checking do AngularJS pois não é necessário monitorar o modelo de
+dados procurando por mudanças [14]. No React.js é preferível o modelo de
+**data-binding unidirecional**, no qual mudanças nos dados provocam atualizações
+na interface [16] (ao contrário do AngularJS, que utiliza a abordagem
+bidirecional). Outro benefício oferecido pelo React.js é a possibilidade de compor a interface do
+usuário em componentes indepedentes e reutilizáveis [16].
+
+Com o uso do virtual DOM, o React.js oferece aos desenvolvedores um estilo
+declarativo de programação [16], com o qual basta especificar como a interface
+deve ser, sendo essa a tarefa de manipulá-la de inteira responsabilidade do
+React.
+
+### 2.3 DOM vs. Virtual DOM
 
 Como discutido anteriormente, o Document Object Model (DOM) é uma
 API presente nos navegadores que permite o acesso e atualização do
@@ -181,7 +238,12 @@ interfaces
 [14] How does the virtual DOM compares
 [15] Comparison of Single-Page Application Frameworks
 [16] Building user interfaces using virtual DOM A comparison 
-[17] State of JS 2019: Frameworks
-https://2019.stateofjs.com/front-end-frameworks/
-
+[17] State of JS 2019: Frameworks https://2019.stateofjs.com/front-end-frameworks/
 [18] JavaScript DOM manipulation performance Comparing...
+[19] Single Page Web Apps Manning Book
+[20] Speed index and critical path
+[21] Mikito Takada. Single page apps in depth.
+http://singlepageappbook.com/goal.html, 2016. Accessed: 2016-04-05.
+[22] https://docs.angularjs.org/guide/scope#scope-life-cycle
+[23] React: Facebook's Functional Turn on Writing JavaScript
+[24] https://reactjs.org/docs/reconciliation.html
