@@ -299,10 +299,12 @@ Na próxima seção, será aprofundado o funcionamento do Document Object Model
 (DOM) para que o mecanismo do Virtual DOM no React.js possa ser detalhado mais facilmente.
 
 ### 2.3 Document Object Model (DOM)
-Como discutido anteriormente, o Document Object Model (DOM) é um padrão
-implementado nos navegadores que permite o acesso e atualização do
-conteúdo e aparência de e uma página web por meio de JavaScript, sendo uma peça chave para a
-interatividade na web [10][18]. Parte central desse componente é uma representação em memória da
+Como discutido anteriormente, o Document Object Model (DOM) é um padrão definido
+por uma especificação W3C [10] e é implementado em todos os principais
+navegadores. O DOM define a estrutura lógica de documentos HTML e como podem ser
+manipulados. Com a interface de programação fornecida pelo DOM, podem acessar um
+documento, navegar através de sua estrutura e modificar seu conteúdo e aparência por meio de JavaScript,
+sendo uma peça chave para a interatividade na web [10][18]. Parte central desse componente é uma representação em memória da
 página HTML composta por objetos manipuláveis por meio de métodos providos pela
 API [14]. O DOM pode ser compreendido como um agrupamento hierárquico de
 objetos ou uma árvore, na qual cada nó representa um elemento HTML e possui
@@ -330,20 +332,106 @@ aplicação irão disparar rotinas de renderização do navegador conhecidas com
 *reflow* e *repaint* [18]. O reflow faz o recálculo
 das posições e tamanhos de todos os elementos da página, e o repaint "pinta"
 os pixels da tela conforme as demarcações de cada elemento [33]. 
-Ambas as rotinas são custosas e podem provocar travamentos na aplicação caso
-sejam disparadas repetidamente, piorando a experiência de uso. Devido a isso, a
-utilização direta da DOM API numa aplicação para atualizar a interface
-de usuário deve ser feita com cautela para minimizar reflows e repaints. [14].
+Ambas as rotinas são custosas e podem afetar negativamente o desempenho da
+aplicação, piorando a experiência de uso. Dessa forma, minimizar a ocorrência de
+reflows e repaints passa a ser de grande importância para atingir fluidez nas
+interações [14], o que pode ser alcançado minimizando a frequência de manipulações do
+DOM [16].
 
 
 ### 2.5 Virtual DOM
+O Virtual DOM é uma representação virtual do DOM composta por uma árvore de
+objetos JavaScript, na qual as operações de adição, atualização e remoção de
+objetos não são custosas [18], sendo uma maneira de minimizar o custo de
+manipulação do DOM real [16]. Nessa árvore, cada elemento do DOM real é
+representado por um objeto JavaScript. A cada mudança de estado uma nova árvore do
+virtual DOM é gerada. Essa nova árvore é então comparada a árvore atual num
+processo conhecido como *reconciliação* ou *diffing* [24]. O resultado é o
+conjunto mínimo de mudanças a serem realizadas no DOM real para sincronizá-lo
+ao virtual DOM mais recente [16]. Utilizando-se dessa abordagem, a aplicação
+pode atualizar o DOM apenas onde necessário [18].
 
-Um virtual DOM é uma representação do DOM composta por objetos
-JavaScript, que é gerada a cada interação. Mudanças na interface podem ser
-detectadas com o algoritmo de **reconciliação** [24], que compara um novo virtual DOM
-a outro pré-existente [18]. O resultado é o conjunto mínimo de mudanças a serem realizadas
-no DOM para sincronizá-lo ao virtual DOM mais recente [16].
+#### 2.5.1 Algoritmo de reconciliação
+Em um componente React, o método `render` gera uma árvore de elementos que farão
+parte do virtual DOM. Uma mudança de estado do componente provoca uma nova
+chamada a `render`, que pode gerar uma árvore de elementos diferente [24]. Com isso,
+o React precisa encontrar a maneira mais eficiente de atualizar o DOM para
+sincronizá-lo a árvore mais recente. O algoritmo de *diffing* ou reconciliação é
+usado para comparar elemento a elemento e buscar diferenças entre as árvores.
 
+De acordo com a documentação oficial do React, o *diffing* entre uma árvore de
+virtual DOM existente uma nova árvore pode ser resumido da seguinte forma [24]: 
+O elemento raiz da árvore atual é comparado com o elemento raiz da nova
+árvore. Caso os elementos tenham tipos diferentes (por exemplo, o primeiro tem o tipo
+`main` enquanto o outro tem o tipo `div`), React irá destruir toda a árvore
+antiga e construir uma nova a partir do elemento raiz da nova árvore. Todo o
+estado dos componentes antigos também é destruído. Caso ambos tenham tipos
+iguais, o nó do DOM pode ser reaproveitado, aplicando-se as devidas modificações
+em seus atributos. Após isso, os as listas de elementos filhos de ambos os elementos são iteradas ao mesmo tempo. Para cada par de
+elementos filhos a mesma comparação é realizada. Se não for possível fazer o
+mapeamento de um elemento da árvore atual para a nova árvore, seu nó do DOM deve
+ser destruído. Da mesma forma, se não for possível fazer o mapeamento de um
+elemento da nova árvore para um existente na árvore atual, signfica que é um
+novo elemento e deve ser inserido no DOM. A comparação continua até que não haja
+elementos a serem comparados e todas as diferenças entre as árvores sejam detectadas.
+
+#### 2.5.2 Otimizações
+Sabe-se que encontrar o conjunto mínimo de diferenças em duas árvores de virtual DOM
+pode ser realizado em tempo O(n³). Nessa complexidade, atualizar 1000
+elementos exigiria 1 bilhão de comparações entre eles [24],
+mas o algoritmo de reconciliação do React.js utiliza algumas heurísticas e
+otimizações que o aproximam de tempo O(n) [16]: 
+
+##### Comparação nível a nível
+Duas árvores virtual DOM são comparadas nível a nível, pois é raro um componente
+ser movido a um nível diferente na árvore. O resultado é um algoritmo mais eficiente, já que normalmente um componente apenas se
+move lateralmente entre componentes irmãos no mesmo nível [34]. Na figura abaixo, a
+*before-tree* representa o estado atual do DOM e a *after-tree* é uma nova árvore
+gerada a partir de uma mudança de estado:
+
+![Comparação de árvore nível a nível (34)](../images/vdom-levels.png)
+
+##### Uso do atributo `key`
+Outra otimização no algoritmo de reconciliação é o uso do atributo `key`. No
+React, para renderizar uma lista de componentes é necessário prover, para cada
+um, uma chave de valor único que permite identificar o mesmo componente na
+árvore atual e na árvore subsequente [24]. Usar `keys` para o mapeamento de
+componentes durante a reconciliação é mais eficiente do que mapear pela
+ordem, o que poderia acarretar mais alterações no DOM do que o necessário caso
+um novo componente seja inserido no meio de outros pré-existentes [24][34].
+
+![Uso de chaves (34)](../images/vdom-keys.png)
+
+##### Renderização de subárvores
+Assim que o estado de um componente é atualizado com a invocação do método
+`setState`, o React o marca como *dirty* (sujo), o que causará a geração de uma nova subárvore de virtual DOM para apenas
+aquele componente e seus filhos [24]. Na figura abaixo, apenas as subárvores de
+componentes marcados como sujos são rerenderizadas pelo React.
+
+![(34)](../images/vdom-rendering1.png)
+![(34)](../images/vdom-rendering2.png)
+
+##### Atualizações em lote
+Além disso, ao finalizar o processo de reconciliação, todas
+as atualizações necessárias no DOM (as diferenças entre o virtual DOM
+atual e o novo virtual DOM), que manualmente seriam feitas com várias chamadas a DOM API, são
+realizadas em lote em poucas chamadas. Com isso, o DOM é atualizado apenas uma
+vez durante um loop de eventos [34], característica é essencial para minimizar repaints e reflows excessivos.
+
+
+#### 2.5.3 Desvantagens
+A abordagem do virtual DOM exige que uma representação virtual do DOM seja
+gerada a cada mudança de estado. Logo, dependendo do tamanho da aplicação e da
+quantidade de elementos na página, o consumo de memória acaba aumentando
+[16][18]. Além disso, apesar do desempenho do React em manipulação do DOM ser
+relativamente superior a outros frameworks e bibliotecas,
+testes de benchmarking revelam que a necessidade de realizar a reconciliação de
+árvores do virtual DOM impacta negativamente o tempo de renderização quando
+comparada a uma aplicação em JavaScript puro (utilizando a DOM API diretamente,
+de forma otimizada) [18].
+
+
+## Referências
 ```
 [1] https://home.cern/science/computing/birth-web/short-history-web
 [2] https://webfoundation.org/about/vision/history-of-the-web/
@@ -354,7 +442,7 @@ no DOM para sincronizá-lo ao virtual DOM mais recente [16].
 [7] Building Rich Web Apps with Ajax (linda dailey paulson)
 [8] Ajax: A new approach to web applications (Jesse James Garrett)
 [9] DHTML Utopia
-[10] W3C: DOM https://dom.spec.whatwg.org/#what
+[10] W3C: DOM https://www.w3.org/TR/DOM-Level-2-Core/introduction.html
 [11] MooTools essentials
 [12] jquery https://jquery.com/
 [13] The Performance Analysis of Web Apps based on virtual dom and reactive user
@@ -380,4 +468,5 @@ http://singlepageappbook.com/goal.html, 2016. Accessed: 2016-04-05.
 [31] https://developers.google.com/web/fundamentals/performance/critical-rendering-path/constructing-the-object-model
 [32] https://developer.mozilla.org/pt-BR/docs/Web/API/Document
 [33] https://developers.google.com/speed/docs/insights/browser-reflow
+[34] React's diff algorithm https://calendar.perfplanet.com/2013/diff/
 ```
