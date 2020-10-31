@@ -56,7 +56,7 @@ async function main() {
 }
 
 const resultsPath = (sc, app, todos, round) => {
-  return `results/A/${app.name}-${todos}-todos-${round}.json`;
+  return `results/${sc}/${app.name}-${todos}-todos-${round}.json`;
 }
 
 /**
@@ -64,7 +64,7 @@ const resultsPath = (sc, app, todos, round) => {
  * @param {puppeteer.Browser} browser 
  */
 async function scenarioA(browser, app, todos, round = 1, screenshots = false) {
-  console.log(`\n#{round} Running Sc#A for ${app.name} with ${todos} todos...`);
+  console.log(`\n#${round} Running Sc#A for ${app.name} with ${todos} todos...`);
 
   let page = await browser.newPage();
 
@@ -73,9 +73,10 @@ async function scenarioA(browser, app, todos, round = 1, screenshots = false) {
   await page.goto(`${app.url}?todos=${todos}`);
   await page.waitForSelector('input.new-todo');
 
+  await page.waitForTimeout(1000);
   await page.tracing.stop();
 
-  console.log(`#{round} Done: Sc#A for ${app.name} with ${todos} todos`);
+  console.log(`#${round} Done: Sc#A for ${app.name} with ${todos} todos`);
 }
 
 async function scenarioB(page, app, todos, round = 1, screenshots = false) {

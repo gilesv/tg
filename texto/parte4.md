@@ -132,7 +132,7 @@ na seção de resultados:
 ```
 Cenário A: Abrir a aplicação
 Objetivo: Medir o tempo de carregamento da página; registrar o First Paint
-Variação: N/A
+Variação: 100, 500 e 1000 itens
 
 Cenário B: Criação de itens
 Objetivo: medir o tempo de execução e renderização durante a construção do DOM e
