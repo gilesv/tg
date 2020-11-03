@@ -132,12 +132,12 @@ na seção de resultados:
 ```
 Cenário A: Abrir a aplicação
 Objetivo: Medir o tempo de carregamento da página; registrar o First Paint
-Variação: N/A
+Variação: 50, 150 e 300 itens
 
 Cenário B: Criação de itens
 Objetivo: medir o tempo de execução e renderização durante a construção do DOM e
 virtual DOM de acordo com a quantidade de itens
-Variação: 100, 500 e 1000 itens
+Variação: 50, 150 e 300 itens
 
 Cenário C: Atualização de itens
 Objetivo: medir o tempo de execução e renderização durante a atualização do DOM
@@ -146,12 +146,12 @@ e virtual DOM de acordo com a quantidade de itens
 Cenário D: Filtragem de itens
 Objetivo: medir o tempo de execução e renderização durante transformações no DOM
 e virtual dom de acordo com a quantidade de itens
-Variação: 100, 500 e 1000 itens
+Variação: 50, 150 e 300 itens
 
 Cenário E: Remoção de itens
 Objetivo: medir o tempo de execução e renderização durante remoção de elementos no DOM
 e virtual dom de acordo com a quantidade de itens
-Variação: 100, 500 e 1000 itens
+Variação: 50, 150 e 300 itens
 ```
 #### Execução dos testes
 Os cenários de teste foram executados no seguinte setup:
