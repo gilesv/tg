@@ -28,10 +28,10 @@ As questões elaboradas e suas métricas:
 
 **Q1**: É possível ter um bom nível de desempenho no Virtual DOM implementado em
 WebAssembly frente ao React em aplicações web?
-- **M1**: Tempo de carregamento
-- **M2**: Tempo de renderização e execução
-- **M3**: Consumo de memória
-- **M4**: Tamanho da aplicação
+- **M1**: Tamanho da aplicação
+- **M2**: Tempo de carregamento
+- **M3**: Tempo de renderização e execução
+- **M4**: Consumo de memória
 
 **Q2**: Quais características da tecnologia WebAssembly impactaram
 positivamente ou negativamente na eficiência de seu virtual DOM?
@@ -47,7 +47,7 @@ meta, esse trabalho propõe o desenvolvimento de um protótipo experimental de u
 biblioteca para desenvolvimento de aplicações web, baseada no React, que faça o uso de um
 Virtual DOM implementado com a tecnologia WebAssembly. O protótipo desenvolvido
 nesse trabalho é referido como Reactron. Dessa forma, será
-possível realizar a coleta de dados a respeito do desempenho com base em uma
+possível realizar testes de benchmarking para a coleta de dados a respeito do desempenho com base em uma
 aplicação de teste para validar a maturidade da tecnologia WebAssembly na
 construção de aplicações web mais eficientes e sua possível inclusão em futuras
 versões do React.
@@ -95,7 +95,7 @@ const puppeteer = require('puppeteer');
   await browser.close()
 })()
 ```
-**Um script que interage com uma página utilizando o Puppeteer**
+**Um exemplo de script que interage com uma página utilizando o Puppeteer**
 
 Chrome DevTools [3] é um conjunto de ferramentas de desenvolvimento providas pelo
 navegador Chrome para auxiliar na otimização de páginas web. Na medição do
@@ -117,44 +117,45 @@ DevTools são agrupados nas seguintes categorias [4][5]:
 - **Painting**: coloração da página com base em recálculos de layout (*repaints*);
 
 Além disso, também é possível extrair informações a respeito do consumo de
-memória (painel *Memory*) e tamanho da aplicação (painel *Sources*). Dessa forma,
+memória (*JS Heap*, no painel *Memory*) e tamanho da aplicação (painel *Sources*). Dessa forma,
 utilizando o Puppeteer para automatizar interações e Chrome DevTools para
-monitorar e gerar relatórios de desempenho, é possível coletar os dados necessários para as métricas M1
-(tempo de carregamento), M2 (tempo de execução renderização), M3 (consumo de memória)
-e M4 (tamanho da aplicação).
+monitorar e gerar relatórios de desempenho, é possível coletar os dados
+necessários para as métricas M1 (tamanho da aplicação), M2 (tempo de
+carregamento), M3 (tempo de execução renderização), M4 (consumo de memória)
+e M5 (tamanho da aplicação).
 
-#### Cenários de teste
-
-Os cenários de teste que serão executados pelo script estão detalhados na tabela
-abaixo. Cada cenário será identificado por uma letra para que seja identificado
+#### Experimentos
+Os experimentos de benchmark que serão executados pelo script tanto na aplicação
+TodoMVC desenvolvida com Reactron e a TodoMVC desenvolvida com React, estão detalhados na tabela
+abaixo. Cada experimento será identificado por uma letra para que seja detalhado
 na seção de resultados:
 
 ```
-Cenário A: Abrir a aplicação
-Objetivo: Medir o tempo de carregamento da página; registrar o First Paint
+Experimento A: Abrir a aplicação
+Objetivo: Medir o tempo de carregamento da página; registrar o First Contentful Paint
 Variação: 50, 150 e 300 itens
 
-Cenário B: Criação de itens
+Experimento B: Criação de itens
 Objetivo: medir o tempo de execução e renderização durante a construção do DOM e
 virtual DOM de acordo com a quantidade de itens
 Variação: 50, 150 e 300 itens
 
-Cenário C: Atualização de itens
+Experimento C: Atualização de itens
 Objetivo: medir o tempo de execução e renderização durante a atualização do DOM
 e virtual DOM de acordo com a quantidade de itens
+Variação: 50, 150 e 300 itens
 
-Cenário D: Filtragem de itens
+Experimento D: Filtragem de itens
 Objetivo: medir o tempo de execução e renderização durante transformações no DOM
 e virtual dom de acordo com a quantidade de itens
 Variação: 50, 150 e 300 itens
 
-Cenário E: Remoção de itens
+Experimento E: Remoção de itens
 Objetivo: medir o tempo de execução e renderização durante remoção de elementos no DOM
 e virtual dom de acordo com a quantidade de itens
 Variação: 50, 150 e 300 itens
 ```
-#### Execução dos testes
-Os cenários de teste foram executados no seguinte setup:
+Os experimentos foram executados no seguinte setup:
 
 **Computador**
 * Processador: Intel® Core™ i7-8550U CPU @ 1.80GHz × 8  
@@ -167,6 +168,75 @@ Os cenários de teste foram executados no seguinte setup:
 Google Chrome
 Versão 85.0.4183.121 (Official Build) (64-bit)
 
+Para cada experimento foram considerados três cenários: 50, 150 e 300 itens, nos
+quais cada item é um componente `TodoItem` renderizado na aplicação. Cada
+experimento foi realizado 10 vezes seguidas em cada cenário para calcular a média dos
+valores das métricas de desempenho.
+
+### Resultados
+
+#### Experimento A: Carregamento da aplicação
+O experimento A consiste em abrir a página da aplicação TodoMVC e obter
+o resultado da métrica *First Contentful Paint* (FCP), que mede o tempo gasto até que o
+navegador renderize o primeiro conteúdo no DOM [7]. O tempo de download
+dos artefatos (arquivos HTML, CSS, JavaScript e WebAssembly) não foi
+incluso na medição. No contexto do trabalho, o FCP permite entender quanto tempo
+é preciso para que o React e o Reactron criem o virtual DOM e aplicar mudanças no
+DOM. Os resultados são apresentados na Figura X abaixo:
+
+[grafico FCP experimento A]
+(Figura X: Gráfico em barras dos valores de First Contenful Paint para o
+Reactron e React nos casos de 50, 150 e 300 itens na tela)
+
+O Reactron, o protótipo desenvolvido nesse trabalho, foi capaz de prover tempos
+de FCP ligeiramente menores que o React nos três cenários (50, 150 e 300 itens).
+
+
+#### Experimento B: Criação de itens
+O experimento B consiste acessar uma página da aplicação TodoMVC sem itens e
+obter as métricas de desempenho (*scripting*, *rendering* e *painting*) e
+consumo de memória (*JS Heap*) enquanto as seguintes interações são executadas repetidamente: focar no campo de texto,
+digitar um texto e pressionar a tecla *Enter* para confirmar, o que acabará 
+criando um novo item de *todo*. As métricas obtidas possibilitarão entender quanto tempo o Reactron e o React
+precisam para processar as interações, manipular o virtual DOM e identificar as
+mudanças a serem aplicadas no DOM, assim como também sua capacidade de
+renderizar as mudanças em lote. Na Figura X são apresentados os resultados do
+experimento B.
+
+[grafico experimento B]
+
+#### Experimento C: Atualização de itens
+O experimento C consiste em acessar uma página da aplicação TodoMVC com um
+número definido de itens pré-existentes e obter as métricas de desempenho (*scripting*,
+*rendering* e *painting*) e consumo de memória (*JS Heap*) enquanto o script provoca mudança nos textos dos
+itens. Assim como no Experimento B, as métricas obtidas possibilitarão entender quanto tempo o Reactron e o React
+precisam para fazer a interface reagir à mudança nos dados da aplicação.
+Na Figura X são apresentados os resultados do experimento C.
+
+[grafico experimento C]
+
+#### Experimento D: Filtragem de itens
+O experimento D consiste em obter métricas de desempenho (*scripting*,
+*rendering* e *painting*) e consumo de memória (*JS Heap*) enquanto é utilizada
+a funcionalidade de filtro (exibir apenas itens concluídos ou não-concluídos)
+após acessar a página com itens pré-existentes. O objetivo é verificar a
+capacidade do Reactron e React de reaproveitar elementos do DOM após a mudança
+de visualização dos itens e também o tempo gasto nessas operações.
+Na figura X são apresentados os resultados do experimento D.
+
+[gráfico experimento D]
+
+#### Experimento E: Remoção de itens
+O experimento E consiste em obter métricas de desempenho (*scripting*,
+*rendering* e *painting*) e consumo de memória (*JS Heap*) enquanto itens
+pré-existentes são removidos da página. O objetivo é desse cenário é verificar o
+tempo de processamento do virtual DOM do Reactron e React e a remoção de
+elementos do DOM. Na figura X são apresentados os resultados do experimento E.
+
+[gráfico experimento E]
+
+
+
 
 ## Referências
 ```
@@ -176,7 +246,7 @@ Versão 85.0.4183.121 (Official Build) (64-bit)
 [4] Performance reference https://developers.google.com/web/tools/chrome-devtools/evaluate-performance/performance-reference?hl=pt-br
 [5] The Performance Analysis of Web Apps based on Virtual DOM
 [6] Headless Chrome https://developers.google.com/web/updates/2017/04/headless-chrome
-
+[7] First Contentful Paint https://web.dev/first-contentful-paint/
 
 
 ```
